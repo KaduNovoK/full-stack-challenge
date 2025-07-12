@@ -1,0 +1,68 @@
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile.local
+    container_name: fullstack-backend
+    restart: unless-stopped
+    working_dir: /var/www/html
+    volumes:
+      - ../backend:/var/www/html
+    ports:
+      - "9000:9000"  # PHP-FPM exposto para nginx
+    networks:
+      - fullstack-network
+    depends_on:
+      - db
+
+  webserver:
+    image: nginx:alpine
+    container_name: fullstack-nginx
+    restart: unless-stopped
+    ports:
+      - "8080:80"
+    volumes:
+      - ../backend:/var/www/html
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf
+    networks:
+      - fullstack-network
+    depends_on:
+      - backend
+
+  db:
+    image: mysql:8.0
+    container_name: fullstack-db
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: fullstack_db
+      MYSQL_USER: fullstack_user
+      MYSQL_PASSWORD: fullstack_secret
+      MYSQL_ROOT_HOST: "%"
+    ports:
+      - "3308:3306"
+    volumes:
+      - fullstack-dbdata:/var/lib/mysql
+    networks:
+      - fullstack-network
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    container_name: fullstack-phpmyadmin
+    restart: unless-stopped
+    depends_on:
+      - db
+    environment:
+      PMA_HOST: db
+      MYSQL_ROOT_PASSWORD: rootpassword
+    ports:
+      - "8081:80"
+    networks:
+      - fullstack-network
+
+networks:
+  fullstack-network:
+    driver: bridge
+
+volumes:
+  fullstack-dbdata:
