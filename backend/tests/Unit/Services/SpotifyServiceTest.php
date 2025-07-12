@@ -3,10 +3,13 @@
 namespace Tests\Unit\Services;
 
 use Tests\TestCase;
-use App\Services\SpotifyService;
+
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Config;
+
+use App\Services\SpotifyService;
+use App\DTO\Spotify\SpotifyTrackDTO;
 
 class SpotifyServiceTest extends TestCase
 {
@@ -16,7 +19,6 @@ class SpotifyServiceTest extends TestCase
     {
         parent::setUp();
 
-        // Configurar as credenciais para o teste
         Config::set('services.spotify.client_id', 'fake_client_id');
         Config::set('services.spotify.client_secret', 'fake_client_secret');
 
@@ -35,11 +37,9 @@ class SpotifyServiceTest extends TestCase
 
         Cache::flush();
 
-        // Primeira chamada: deve buscar o token e armazenar em cache
         $token = $this->spotifyService->getAccessToken();
         $this->assertEquals('fake_token', $token);
 
-        // Alterar o fake para um token diferente se a função for chamada novamente (não deveria ser)
         Http::fake([
             'https://accounts.spotify.com/api/token' => Http::response([
                 'access_token' => 'another_token',
@@ -48,7 +48,6 @@ class SpotifyServiceTest extends TestCase
             ], 200)
         ]);
 
-        // Segunda chamada: deve retornar o token do cache (fake_token)
         $cachedToken = $this->spotifyService->getAccessToken();
         $this->assertEquals('fake_token', $cachedToken);
     }
@@ -65,9 +64,8 @@ class SpotifyServiceTest extends TestCase
         $this->spotifyService->getAccessToken();
     }
 
-    public function test_get_track_by_isrc_returns_track_data()
+    public function test_get_track_by_isrc_returns_dto()
     {
-        // Mock do token
         Http::fake([
             'https://accounts.spotify.com/api/token' => Http::response([
                 'access_token' => 'fake_token',
@@ -77,18 +75,46 @@ class SpotifyServiceTest extends TestCase
             'https://api.spotify.com/v1/search*' => Http::response([
                 'tracks' => [
                     'items' => [
-                        ['id' => 'track123', 'name' => 'Track Test']
-                    ]
-                ]
-            ], 200)
+                        [
+                            'id' => 'track123',
+                            'name' => 'Track Test',
+                            'duration_ms' => 123000,
+                            'explicit' => false,
+                            'preview_url' => null,
+                            'uri' => 'spotify:track:track123',
+                            'track_number' => 1,
+                            'disc_number' => 1,
+                            'is_playable' => true,
+                            'popularity' => 50,
+                            'album' => [
+                                'album_type' => 'album',
+                                'id' => 'album123',
+                                'name' => 'Album Test',
+                                'release_date' => '2020-01-01',
+                                'release_date_precision' => 'day',
+                                'total_tracks' => 10,
+                                'uri' => 'spotify:album:album123',
+                                'is_playable' => true,
+                                'available_markets' => ['US'],
+                                'artists' => [],
+                                'images' => [],
+                                'external_urls' => ['spotify' => 'https://spotify.com/album/album123'],
+                            ],
+                            'artists' => [],
+                            'external_ids' => ['isrc' => 'ISRC123'],
+                            'external_urls' => ['spotify' => 'https://spotify.com/track/track123'],
+                        ],
+                    ],
+                ],
+            ], 200),
         ]);
 
         Cache::flush();
 
-        $track = $this->spotifyService->getTrackByISRC('FAKEISRC123');
-        $this->assertIsArray($track);
-        $this->assertEquals('track123', $track['id']);
-        $this->assertEquals('Track Test', $track['name']);
+        $result = $this->spotifyService->getTrackByISRC('ISRC123');
+        $this->assertInstanceOf(SpotifyTrackDTO::class, $result);
+        $this->assertEquals('track123', $result->id);
+        $this->assertEquals('Track Test', $result->name);
     }
 
     public function test_get_track_by_isrc_returns_null_on_failure()
@@ -99,12 +125,12 @@ class SpotifyServiceTest extends TestCase
                 'token_type' => 'Bearer',
                 'expires_in' => 3600,
             ], 200),
-            'https://api.spotify.com/v1/search*' => Http::response([], 500)
+            'https://api.spotify.com/v1/search*' => Http::response([], 500),
         ]);
 
         Cache::flush();
 
-        $track = $this->spotifyService->getTrackByISRC('FAKEISRC123');
-        $this->assertNull($track);
+        $result = $this->spotifyService->getTrackByISRC('ISRC123');
+        $this->assertNull($result);
     }
 }

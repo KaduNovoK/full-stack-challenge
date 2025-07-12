@@ -5,6 +5,8 @@ namespace App\Services;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Cache;
 
+use App\DTO\Spotify\SpotifyTrackDTO;
+
 class SpotifyService
 {
     protected string $clientId;
@@ -34,7 +36,7 @@ class SpotifyService
         });
     }
 
-    public function getTrackByISRC(string $isrc): ?array
+    public function getTrackByISRC(string $isrc): ?SpotifyTrackDTO
     {
         $token = $this->getAccessToken();
 
@@ -49,6 +51,11 @@ class SpotifyService
             return null;
         }
 
-        return $response->json()['tracks']['items'][0] ?? null;
+        $data = $response->json()['tracks']['items'][0] ?? null;
+        if (!$data) {
+            return null;
+        }
+
+        return new SpotifyTrackDTO($data);
     }
 }

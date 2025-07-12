@@ -1,53 +1,70 @@
 <?php
 
-namespace Tests\Unit\Console\Commands;
+namespace Tests\Feature;
 
 use Tests\TestCase;
 use App\Services\SpotifyService;
-use Illuminate\Support\Facades\Artisan;
-use Illuminate\Support\Facades\App;
-use Symfony\Component\Console\Command\Command;
-use Illuminate\Testing\PendingCommand;
+use App\Console\Commands\SpotifyFetchTrack;
+use App\DTO\Spotify\SpotifyTrackDTO;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Mockery;
 
 class SpotifyFetchTrackTest extends TestCase
 {
-    public function test_command_outputs_track_info_when_found()
+    public function test_handle_returns_track_info()
     {
-        $mockService = $this->createMock(SpotifyService::class);
-        $mockService->method('getTrackByISRC')
-            ->willReturn(['id' => '123abc', 'name' => 'Track Name Test']);
+        $spotifyServiceMock = Mockery::mock(SpotifyService::class);
+        $spotifyServiceMock->shouldReceive('getTrackByISRC')
+            ->with('ISRC123')
+            ->andReturn(new SpotifyTrackDTO([
+                'id' => 'track123',
+                'name' => 'Track Test',
+                'duration_ms' => 123000,
+                'explicit' => false,
+                'preview_url' => null,
+                'uri' => 'spotify:track:track123',
+                'track_number' => 1,
+                'disc_number' => 1,
+                'is_playable' => true,
+                'popularity' => 50,
+                'album' => [
+                    'album_type' => 'album',
+                    'id' => 'album123',
+                    'name' => 'Album Test',
+                    'release_date' => '2020-01-01',
+                    'release_date_precision' => 'day',
+                    'total_tracks' => 10,
+                    'uri' => 'spotify:album:album123',
+                    'is_playable' => true,
+                    'available_markets' => ['US'],
+                    'artists' => [],
+                    'images' => [],
+                    'external_urls' => ['spotify' => 'https://spotify.com/album/album123'],
+                ],
+                'artists' => [],
+                'external_ids' => ['isrc' => 'ISRC123'],
+                'external_urls' => ['spotify' => 'https://spotify.com/track/track123'],
+            ]));
 
-        App::instance(SpotifyService::class, $mockService);
+        $this->app->instance(SpotifyService::class, $spotifyServiceMock);
 
-        $this->artisan('spotify:fetch-track FAKEISRC')
-            ->expectsOutput('Track ID: 123abc')
-            ->expectsOutput('Track Name: Track Name Test')
-            ->assertExitCode(Command::SUCCESS);
+        $this->artisan('spotify:fetch-track', ['isrc' => 'ISRC123'])
+             ->expectsOutput('Track ID: track123')
+             ->expectsOutput('Track Name: Track Test')
+             ->assertExitCode(0);
     }
 
-    public function test_command_outputs_warning_when_track_not_found()
+    public function test_handle_returns_error_when_track_not_found()
     {
-        $mockService = $this->createMock(SpotifyService::class);
-        $mockService->method('getTrackByISRC')
-            ->willReturn(null);
+        $spotifyServiceMock = Mockery::mock(SpotifyService::class);
+        $spotifyServiceMock->shouldReceive('getTrackByISRC')
+            ->with('ISRC123')
+            ->andReturn(null);
 
-        App::instance(SpotifyService::class, $mockService);
+        $this->app->instance(SpotifyService::class, $spotifyServiceMock);
 
-        $this->artisan('spotify:fetch-track FAKEISRC')
-            ->expectsOutput('Nenhuma faixa encontrada para o ISRC: FAKEISRC')
-            ->assertExitCode(Command::FAILURE);
-    }
-
-    public function test_command_outputs_error_on_exception()
-    {
-        $mockService = $this->createMock(SpotifyService::class);
-        $mockService->method('getTrackByISRC')
-            ->willThrowException(new \Exception('Erro simulado'));
-
-        App::instance(SpotifyService::class, $mockService);
-
-        $this->artisan('spotify:fetch-track FAKEISRC')
-            ->expectsOutput('Erro ao buscar faixa: Erro simulado')
-            ->assertExitCode(Command::FAILURE);
+        $this->artisan('spotify:fetch-track', ['isrc' => 'ISRC123'])
+             ->expectsOutput('Track not found for ISRC: ISRC123')
+             ->assertExitCode(1);
     }
 }
