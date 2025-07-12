@@ -30,9 +30,9 @@ WORKDIR /var/www/html
 # O volume será mapeado no docker-compose para permitir hot reload de código
 # Por isso aqui não copiamos código direto, só configuramos o ambiente
 
-# Ajustar permissões (se necessário)
-# RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
-
 EXPOSE 9000
 
-CMD ["php-fpm"]
+COPY ./docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
+RUN chmod +x /usr/local/bin/docker-entrypoint.sh
+
+ENTRYPOINT ["docker-entrypoint.sh"]
