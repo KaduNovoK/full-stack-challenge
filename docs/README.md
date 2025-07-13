@@ -146,3 +146,5 @@ Contém este documento explicativo.
 ## Agradecimentos
 
 Por fim, agradeço a oportunidade. Espero que a solução esteja à altura e contribua positivamente para o processo. Que Deus os abençoe.
+
+-- Última atualização por Carlos em 13/07/2025
