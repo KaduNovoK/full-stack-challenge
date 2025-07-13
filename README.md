@@ -71,3 +71,7 @@ Uma vez armazenados os dados, precisamos exibí-los através de uma webpage púb
 * Curioso
 * Gostar de trabalhar em equipe
 * Compromissado
+
+## Sobre a implementação do teste
+
+Os detalhes completos da implementação, incluindo instruções para rodar o projeto, decisões técnicas e estrutura do sistema, estão disponíveis em [`./docs/README.md`](./docs/README.md).
