@@ -15,7 +15,7 @@ class TrackAssembler
         // Pega a menor imagem do álbum (última do array)
         $albumThumb = null;
         if (!empty($dto->album->images)) {
-            $albumThumb = end($dto->album->images)->url;
+            $albumThumb = $dto->album->images[0]->url;
         }
 
         // Verifica se a faixa está disponível no mercado BR

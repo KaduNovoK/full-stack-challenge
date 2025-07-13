@@ -60,6 +60,20 @@ services:
     networks:
       - fullstack-network
 
+  frontend:
+    image: node:18-alpine
+    container_name: fullstack-frontend
+    working_dir: /app
+    volumes:
+      - ../frontend:/app
+    ports:
+      - "4200:4200"
+    command: sh -c "npm install -g @angular/cli && npm install && ng serve --host 0.0.0.0"
+    environment:
+      - NODE_OPTIONS=--openssl-legacy-provider
+    networks:
+      - fullstack-network
+
 networks:
   fullstack-network:
     driver: bridge
