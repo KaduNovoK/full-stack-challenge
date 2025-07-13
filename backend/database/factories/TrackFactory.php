@@ -25,6 +25,7 @@ class TrackFactory extends Factory
             'spotify_url' => fake()->url(),
             'release_date' => fake()->date(),
             'is_available_in_br' => true,
+            'isrc' => $this->faker->unique()->regexify('[A-Z]{2}[A-Z0-9]{3}\d{7}'),
         ];
     }
 }

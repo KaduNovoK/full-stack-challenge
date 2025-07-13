@@ -10,13 +10,14 @@ class Track extends Model
     use HasFactory;
 
     protected $fillable = [
+        'isrc',
         'title',
         'artists',
-        'duration',
         'thumb_url',
+        'release_date',
+        'duration',
         'preview_url',
         'spotify_url',
-        'release_date',
         'is_available_in_br',
     ];
 

@@ -3,6 +3,7 @@
 namespace App\Jobs;
 
 use App\Services\SpotifyService;
+use App\Services\TrackService;
 use App\Assemblers\TrackAssembler;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -20,7 +21,7 @@ class FetchAndPersistTrackJob
         $this->isrc = $isrc;
     }
 
-    public function handle(SpotifyService $spotifyService): void
+    public function handle(SpotifyService $spotifyService, TrackService $trackService): void
     {
         $dto = $spotifyService->getTrackByISRC($this->isrc);
 
@@ -30,7 +31,6 @@ class FetchAndPersistTrackJob
             return;
         }
 
-        $track = TrackAssembler::fromSpotifyDTO($dto);
-        $track->save();
+        $trackService->createOrUpdateFromSpotifyTrackDTO($dto);
     }
 }

@@ -4,6 +4,7 @@ namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
 use App\Services\SpotifyService;
+use App\Services\TrackService;
 use App\Assemblers\TrackAssembler;
 
 class SpotifyFetchTrack extends Command
@@ -13,10 +14,11 @@ class SpotifyFetchTrack extends Command
 
     protected SpotifyService $spotifyService;
 
-    public function __construct(SpotifyService $spotifyService)
+    public function __construct(SpotifyService $spotifyService, TrackService $trackService)
     {
         parent::__construct();
         $this->spotifyService = $spotifyService;
+        $this->trackService = $trackService;
     }
 
     public function handle()
@@ -29,8 +31,7 @@ class SpotifyFetchTrack extends Command
             return 1;
         }
 
-        $track = TrackAssembler::fromSpotifyDTO($dto);
-        $track->save();
+        $track = $this->trackService->createOrUpdateFromSpotifyTrackDTO($dto);
 
         // Apenas exibir por enquanto (sem persistir)
         $this->info("Track: {$track->title}");

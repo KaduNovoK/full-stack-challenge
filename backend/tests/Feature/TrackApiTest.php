@@ -37,6 +37,7 @@ class TrackApiTest extends TestCase
             'spotify_url' => 'https://spotify.com/track/test',
             'is_available_in_br' => true,
             'thumb_url' => 'https://example.com/thumb.jpg',
+            'isrc' => 'USRC17607839',
         ]);
 
         $response = $this->getJson("/api/track/{$track->id}");

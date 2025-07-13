@@ -4,6 +4,7 @@ namespace App\Services;
 
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Log;
 
 use App\DTO\Spotify\SpotifyTrackDTO;
 
@@ -46,6 +47,12 @@ class SpotifyService
                 'type' => 'track',
                 'limit' => 1,
             ]);
+
+        // Loga toda a resposta da API Spotify para esse ISRC
+        Log::channel('spotify')->info("Spotify API response for ISRC: {$isrc}", [
+            'status' => $response->status(),
+            'body' => $response->json(),
+        ]);
 
         if ($response->failed()) {
             return null;

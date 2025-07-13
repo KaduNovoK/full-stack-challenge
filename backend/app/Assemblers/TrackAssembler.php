@@ -25,6 +25,7 @@ class TrackAssembler
         $durationFormatted = self::formatDuration($dto->durationMs);
 
         return new Track([
+            'isrc' => $dto->externalIds->isrc,
             'title' => $dto->name,
             'artists' => $artistNames,
             'thumb_url' => $albumThumb,

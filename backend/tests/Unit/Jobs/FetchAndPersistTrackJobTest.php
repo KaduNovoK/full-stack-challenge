@@ -54,15 +54,16 @@ class FetchAndPersistTrackJobTest extends TestCase
             ->with('ISRC123')
             ->andReturn($dto);
 
+        $trackServiceMock = Mockery::mock(\App\Services\TrackService::class);
+        $trackServiceMock->shouldReceive('createOrUpdateFromSpotifyTrackDTO')
+            ->once()
+            ->with($dto);
+
         $this->app->instance(SpotifyService::class, $spotifyServiceMock);
+        $this->app->instance(\App\Services\TrackService::class, $trackServiceMock);
 
         $job = new FetchAndPersistTrackJob('ISRC123');
-        $job->handle($spotifyServiceMock);
-
-        $this->assertDatabaseHas('tracks', [
-            'title' => 'Track Test',
-            'thumb_url' => 'https://example.com/thumb.jpg',
-        ]);
+        $job->handle($spotifyServiceMock, $trackServiceMock);
     }
 
     public function test_it_logs_warning_if_track_not_found()
@@ -76,7 +77,9 @@ class FetchAndPersistTrackJobTest extends TestCase
             ->with('ISRC404')
             ->andReturn(null);
 
+        $trackServiceMock = Mockery::mock(\App\Services\TrackService::class);
+
         $job = new FetchAndPersistTrackJob('ISRC404');
-        $job->handle($spotifyServiceMock);
+        $job->handle($spotifyServiceMock, $trackServiceMock);
     }
 }
