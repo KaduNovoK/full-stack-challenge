@@ -27,14 +27,16 @@ URLs públicas disponíveis após a inicialização:
 2. `docker compose up -d`
 3. `docker compose ps | grep fullstack` (para validar os containers)
 4. `docker compose logs db -f` (aguarde o MySQL inicializar completamente)
-5. Edite o `.env` em `/backend` com os dados do banco e as credenciais da API do Spotify:
+5. Copiar o `.env.sample` em `.env` em `/backend` com os dados do banco e as credenciais da API do Spotify:
 
    * `SPOTIFY_CLIENT_ID=...`
    * `SPOTIFY_CLIENT_SECRET=...`
-6. `docker compose exec backend php artisan migrate`
-7. `docker compose exec backend php artisan test`
-8. `docker compose exec backend php artisan spotify:batch-fetch`
-9. Acesse as rotas informadas.
+6. `docker compose exec backend composer install`
+7. `docker compose exec backend php artisan key:generate`
+8. `docker compose exec backend php artisan migrate`
+9. `docker compose exec backend php artisan test`
+10. `docker compose exec backend php artisan spotify:batch-fetch`
+11. Acesse as rotas informadas.
 
 ## Divisão de contextos
 
