@@ -4,6 +4,7 @@ namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
 use App\Services\SpotifyService;
+use App\Assemblers\TrackAssembler;
 
 class SpotifyFetchTrack extends Command
 {
@@ -21,15 +22,22 @@ class SpotifyFetchTrack extends Command
     public function handle()
     {
         $isrc = $this->argument('isrc');
-        $track = $this->spotifyService->getTrackByISRC($isrc);
+        $dto = $this->spotifyService->getTrackByISRC($isrc);
 
-        if (!$track) {
+        if (!$dto) {
             $this->error("Track not found for ISRC: $isrc");
             return 1;
         }
 
-        $this->info("Track ID: {$track->id}");
-        $this->info("Track Name: {$track->name}");
+        $track = TrackAssembler::fromSpotifyDTO($dto);
+        $track->save();
+
+        // Apenas exibir por enquanto (sem persistir)
+        $this->info("Track: {$track->title}");
+        $this->info("Artists: {$track->artists}");
+        $this->info("Duration: {$track->duration}");
+        $this->info("Released: {$track->release_date}");
+        $this->info("Available in BR: " . ($track->is_available_in_br ? 'Yes' : 'No'));
 
         return 0;
     }

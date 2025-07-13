@@ -4,14 +4,15 @@ namespace Tests\Feature;
 
 use Tests\TestCase;
 use App\Services\SpotifyService;
-use App\Console\Commands\SpotifyFetchTrack;
 use App\DTO\Spotify\SpotifyTrackDTO;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Mockery;
 
 class SpotifyFetchTrackTest extends TestCase
 {
-    public function test_handle_returns_track_info()
+    use RefreshDatabase;
+
+    public function test_handle_saves_track_and_outputs_info()
     {
         $spotifyServiceMock = Mockery::mock(SpotifyService::class);
         $spotifyServiceMock->shouldReceive('getTrackByISRC')
@@ -36,9 +37,15 @@ class SpotifyFetchTrackTest extends TestCase
                     'total_tracks' => 10,
                     'uri' => 'spotify:album:album123',
                     'is_playable' => true,
-                    'available_markets' => ['US'],
+                    'available_markets' => ['BR'],
                     'artists' => [],
-                    'images' => [],
+                    'images' => [
+                        [
+                            'height' => 64,
+                            'width' => 64,
+                            'url' => 'https://example.com/thumb.jpg',
+                        ]
+                    ],
                     'external_urls' => ['spotify' => 'https://spotify.com/album/album123'],
                 ],
                 'artists' => [],
@@ -49,9 +56,19 @@ class SpotifyFetchTrackTest extends TestCase
         $this->app->instance(SpotifyService::class, $spotifyServiceMock);
 
         $this->artisan('spotify:fetch-track', ['isrc' => 'ISRC123'])
-             ->expectsOutput('Track ID: track123')
-             ->expectsOutput('Track Name: Track Test')
-             ->assertExitCode(0);
+            ->expectsOutput('Track: Track Test')
+            ->expectsOutput('Artists: ') // vazio porque mock não tem artistas
+            ->expectsOutput('Duration: 02:03') // 123000 ms formatados em mm:ss
+            ->expectsOutputToContain('Released: 2020-01-01')
+            ->expectsOutput('Available in BR: Yes')
+            ->assertExitCode(0);
+
+        $this->assertDatabaseHas('tracks', [
+            'title' => 'Track Test',
+            'release_date' => '2020-01-01',
+            'is_available_in_br' => true,
+            'thumb_url' => 'https://example.com/thumb.jpg',
+        ]);
     }
 
     public function test_handle_returns_error_when_track_not_found()
@@ -64,7 +81,7 @@ class SpotifyFetchTrackTest extends TestCase
         $this->app->instance(SpotifyService::class, $spotifyServiceMock);
 
         $this->artisan('spotify:fetch-track', ['isrc' => 'ISRC123'])
-             ->expectsOutput('Track not found for ISRC: ISRC123')
-             ->assertExitCode(1);
+            ->expectsOutput('Track not found for ISRC: ISRC123')
+            ->assertExitCode(1);
     }
 }
